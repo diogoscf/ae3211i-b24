@@ -3,25 +3,25 @@ from constants import G
 import matplotlib.pyplot as plt
 
 
-def add_cargo(ax, OEW, xcg_oew, front_cargo_location, back_cargo_location, front_cargo, back_cargo):
-    full_cargo_weight = OEW + front_cargo + back_cargo
+def add_cargo(ax, start_weight, start_cg, front_cargo_location, back_cargo_location, front_cargo, back_cargo):
+    full_cargo_weight = start_weight + front_cargo + back_cargo
     full_cargo_cg = (
-        OEW * xcg_oew
+        start_weight * start_cg
         + front_cargo * front_cargo_location
         + back_cargo * back_cargo_location
     ) / (full_cargo_weight)
     front_cgs = [
-        xcg_oew,
-        (OEW * xcg_oew + front_cargo * front_cargo_location) / (OEW + front_cargo),
+        start_cg,
+        (start_weight * start_cg + front_cargo * front_cargo_location) / (start_weight + front_cargo),
         full_cargo_cg,
     ]
-    front_weights = [OEW, OEW + front_cargo, full_cargo_weight]
+    front_weights = [start_weight, start_weight + front_cargo, full_cargo_weight]
     back_cgs = [
-        xcg_oew,
-        (OEW * xcg_oew + back_cargo * back_cargo_location) / (OEW + back_cargo),
+        start_cg,
+        (start_weight * start_cg + back_cargo * back_cargo_location) / (start_weight + back_cargo),
         full_cargo_cg,
     ]
-    back_weights = [OEW, OEW + back_cargo, full_cargo_weight]
+    back_weights = [start_weight, start_weight + back_cargo, full_cargo_weight]
     ax.plot(front_cgs, front_weights, "orangered", label="Cargo loading (front to back)")
     ax.plot(back_cgs, back_weights, "darkred", label="Cargo loading (back to front)")
     return full_cargo_cg, full_cargo_weight
@@ -130,36 +130,59 @@ def add_pax(ax, num_pax, pax_weight, first_row_position, seat_pitch, start_cg, s
                 + (num_full_rows) * ((num_full_rows-1)/2 * seat_pitch + first_row_position)
             )
         ) / (start_weight + num_pax * pax_weight),
-        num_pax * pax_weight
-    ),
+        start_weight + num_pax * pax_weight
+    )
+
+
+def add_fuel():
+    pass
 
 
 def generate_loading_diagram(
-    filename, show_legend, OEW_kg, xcg_oew, x_LEMAC_m, MAC_m, front_cargo_location_m, back_cargo_location_m, 
-    front_cargo_kg, back_cargo_kg, num_pax, pax_kg, first_row_position_m, seat_pitch_in
+    filename, show_legend, cargo_first, OEW_kg, xcg_oew, x_LEMAC_m, MAC_m, front_cargo_location_m,
+    back_cargo_location_m, front_cargo_kg, back_cargo_kg, num_pax, pax_kg, first_row_position_m, seat_pitch_in
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
     OEW = OEW_kg * G  # convert to [N]
 
-    after_cargo_cg, after_cargo_weight = add_cargo(
-        ax,
-        OEW,
-        xcg_oew,
-        (front_cargo_location_m - x_LEMAC_m) / MAC_m,
-        (back_cargo_location_m - x_LEMAC_m) / MAC_m,
-        front_cargo_kg * G,
-        back_cargo_kg * G,
-    )
-
-    after_pax_cg, after_pax_weight = add_pax(
-        ax,
-        num_pax,
-        pax_kg * G,
-        (first_row_position_m - x_LEMAC_m) / MAC_m,
-        (seat_pitch_in * 0.0254) / MAC_m,
-        after_cargo_cg,
-        after_cargo_weight,
-    )
+    if cargo_first:
+        after_cargo_cg, after_cargo_weight = add_cargo(
+            ax,
+            OEW,
+            xcg_oew,
+            (front_cargo_location_m - x_LEMAC_m) / MAC_m,
+            (back_cargo_location_m - x_LEMAC_m) / MAC_m,
+            front_cargo_kg * G,
+            back_cargo_kg * G,
+        )
+        after_cargo_and_pax_cg, after_cargo_and_pax_weight = add_pax(
+            ax,
+            num_pax,
+            pax_kg * G,
+            (first_row_position_m - x_LEMAC_m) / MAC_m,
+            (seat_pitch_in * 0.0254) / MAC_m,
+            after_cargo_cg,
+            after_cargo_weight,
+        )
+    else:
+        after_pax_cg, after_pax_weight = add_pax(
+            ax,
+            num_pax,
+            pax_kg * G,
+            (first_row_position_m - x_LEMAC_m) / MAC_m,
+            (seat_pitch_in * 0.0254) / MAC_m,
+            xcg_oew,
+            OEW
+        )
+        after_cargo_and_pax_cg, after_cargo_and_pax_weight = add_cargo(
+            ax,
+            after_pax_weight,
+            after_pax_cg,
+            (front_cargo_location_m - x_LEMAC_m) / MAC_m,
+            (back_cargo_location_m - x_LEMAC_m) / MAC_m,
+            front_cargo_kg * G,
+            back_cargo_kg * G,
+        )
 
     if show_legend:
         ax.legend()
@@ -174,6 +197,7 @@ if __name__ == "__main__":
     full_payload_config = {
         "filename": "full_payload_config",  # filename to save to
         "show_legend": True,                # whether to display the legend
+        "cargo_first": True,                # whether to load cargo first (True) or passengers (False)
         "x_LEMAC_m": 15,                    # position of the MAC from the nose, in [m]
         "MAC_m": 4,                         # MAC, in [m]
         "OEW_kg": 10_000,                   # OEW, in [kg]
