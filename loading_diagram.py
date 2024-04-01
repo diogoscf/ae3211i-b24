@@ -140,9 +140,32 @@ def add_pax(ax, start_weight, start_cg, num_pax, pax_weight, first_row_position,
 
 def add_fuel(ax, start_weight, start_cg, load_wing_tank_first, wing_tank_capacity, center_tank_capacity, wing_tank_position, center_tank_position, fuel_load):
     if load_wing_tank_first:
-        pass
+        wing_load = min(wing_tank_capacity, fuel_load)
+        center_load = max(0, fuel_load - wing_load)
+        weights = [start_weight, start_weight + wing_load, start_weight + wing_load + center_load]
+        cgs = [
+            start_cg,
+            (start_weight * start_cg + wing_load * wing_tank_position) / (start_weight + wing_load),
+            (start_weight * start_cg + wing_load * wing_tank_position + center_load * center_tank_position) / (start_weight + wing_load + center_load),
+        ]
+    else:
+        center_load = min(center_tank_capacity, fuel_load)
+        wing_load = max(0, fuel_load - center_load)
+        weights = [start_weight, start_weight + center_load, start_weight + center_load + wing_load]
+        cgs = [
+            start_cg,
+            (start_weight * start_cg + center_load * center_tank_position) / (start_weight + center_load),
+            (start_weight * start_cg + center_load * center_tank_position + wing_load * wing_tank_position) / (start_weight + center_load + wing_load),
+        ]
+    if wing_load + center_load > wing_tank_capacity + center_tank_capacity:
+        raise ValueError(
+            f"wing load of {wing_load / G} [kg] and center load of {center_load / G} [kg] is greater than the capacity "
+            f"{(wing_load + center_load) / G} [kg]"
+        )
+    
+    ax.plot(cgs, weights, c="blue", label="Fuel")
 
-    return 1, 2, {start_cg}
+    return weights[-1], cgs[-1], {start_cg, *cgs}
 
 
 def generate_loading_diagram(
