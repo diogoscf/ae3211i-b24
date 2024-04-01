@@ -36,87 +36,95 @@ def add_pax(
 ):
     num_full_rows, num_last_row = divmod(num_pax, 5)
     has_extra_row = num_last_row != 0
+    last_row_position = first_row_position + (num_full_rows - 1) * seat_pitch
 
     # Windows
     weights_windows = []
     cgs_windows_front_to_back = []
-    for i in range(1, num_full_rows + has_extra_row + 1):
-        weights_windows.append(start_weight + 2 * i * pax_weight)
+    cgs_windows_back_to_front = []
+    for i in range(num_full_rows + has_extra_row + 1):
+        Wi = start_weight + 2 * i * pax_weight
+        weights_windows.append(Wi)
         cgs_windows_front_to_back.append(
             (
                 start_weight * start_cg
-                + 2 * i * pax_weight * ((i - 1) / 2 * seat_pitch + first_row_position)
+                + pax_weight * (
+                    (2 * i) * ((i-1)/2 * seat_pitch + first_row_position)
+                )
             )
-            / (start_weight + 2 * i * pax_weight)
+            / Wi
+        )
+        cgs_windows_back_to_front.append(
+            (
+                start_weight * start_cg
+                + pax_weight * (
+                    (2 * i) * (last_row_position - (i-1)/2 * seat_pitch)
+                )
+            ) / Wi
         )
 
     # Aisles
     weights_aisles = []
     cgs_aisles_front_to_back = []
-    for i in range(1, num_full_rows + has_extra_row + 1):
-        weights_aisles.append(
-            start_weight + 2 * pax_weight * ((num_full_rows + has_extra_row) + i)
-        )
+    cgs_aisles_back_to_front = []
+    for i in range(num_full_rows + has_extra_row + 1):
+        Wi = start_weight + 2 * pax_weight * ((num_full_rows + has_extra_row) + i)
+        weights_aisles.append(Wi)
         cgs_aisles_front_to_back.append(
             (
                 start_weight * start_cg
-                + 2
-                * (num_full_rows + has_extra_row)
-                * pax_weight
-                * (
-                    (num_full_rows + has_extra_row - 1) / 2 * seat_pitch
-                    + first_row_position
+                + pax_weight * (
+                    (2 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
+                    + (2 * i) * ((i-1)/2 * seat_pitch + first_row_position)
                 )
-                + 2 * i * pax_weight * ((i - 1) / 2 * seat_pitch * first_row_position)
             )
-            / (
-                start_weight
-                + pax_weight * (2 * (num_full_rows + has_extra_row) + 2 * i)
+            / Wi
+        )
+        cgs_aisles_back_to_front.append(
+            (
+                start_weight * start_cg
+                + pax_weight * (
+                    (2 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
+                    + (2 * i) * (last_row_position - (i-1)/2 * seat_pitch)
+                )
             )
+            / Wi
         )
 
     # middle
     weights_middle = []
     cgs_middle_front_to_back = []
-    for i in range(1, num_full_rows + 1):
-        weights_middle.append(
-            start_weight + pax_weight * (4 * (num_full_rows + has_extra_row) + i)
-        )
+    cgs_middle_back_to_front = []
+    for i in range(num_full_rows + 1):
+        Wi = start_weight + pax_weight * (4 * (num_full_rows + has_extra_row) + i)
+        weights_middle.append(Wi)
         cgs_middle_front_to_back.append(
             (
                 start_weight * start_cg
-                + pax_weight
-                * (
-                    4
-                    * (num_full_rows + has_extra_row)
-                    * (
-                        (num_full_rows + has_extra_row - 1) / 2 * seat_pitch
-                        + first_row_position
-                    )
-                    + i * ((i - 1) / 2 * seat_pitch + first_row_position)
+                + pax_weight * (
+                    (4 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
+                    + i * ((i-1)/2 * seat_pitch + first_row_position)
                 )
             )
-            / (start_weight + pax_weight * (4 * (num_full_rows + has_extra_row) + i))
+            / Wi
+        )
+        cgs_middle_back_to_front.append(
+            (
+                start_weight * start_cg
+                + pax_weight * (
+                    (4 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
+                    + i * (last_row_position - seat_pitch - (i-1)/2 * seat_pitch)
+                )
+            )
+            / Wi
         )
 
-    ax.plot(
-        cgs_windows_front_to_back,
-        weights_windows,
-        "orange",
-        label="Window seats (front to back)",
-    )
-    ax.plot(
-        cgs_aisles_front_to_back,
-        weights_aisles,
-        "yellowgreen",
-        label="Aisle seats (front to back)",
-    )
-    ax.plot(
-        cgs_middle_front_to_back,
-        weights_middle,
-        "aquamarine",
-        label="Middle seats (front to back)",
-    )
+    ax.plot(cgs_windows_front_to_back, weights_windows, "orange", label="Window seats (front to back)")
+    ax.plot(cgs_windows_back_to_front, weights_windows, "peru", label="Window seats (back to front)")
+    ax.plot(cgs_aisles_front_to_back, weights_aisles, "yellowgreen", label="Aisle seats (front to back)")
+    ax.plot(cgs_aisles_back_to_front, weights_aisles, "lawngreen", label="Aisle seats (back to front)")
+    ax.plot(cgs_middle_front_to_back, weights_middle, "aquamarine", label="Middle seats (front to back)")
+    ax.plot(cgs_middle_back_to_front, weights_middle, "lightseagreen", label="Middle seats (back to front)")
 
     return ..., num_pax * pax_weight
 
@@ -162,6 +170,8 @@ def generate_loading_diagram(
 
     if show_legend:
         ax.legend()
+    ax.set_xlabel(r"$x_{cg}/\bar{c}$ [-]")
+    ax.set_ylabel(r"$W$ [N]")
     fig.tight_layout()
     fig.savefig(filename, dpi=300, bbox_inches="tight")
     plt.show()
@@ -175,10 +185,10 @@ if __name__ == "__main__":
         "MAC_m": 4,  # MAC, in [m]
         "OEW_kg": 10_000,  # OEW, in [kg]
         "xcg_oew": 0.3,  # xcg of the OEW, in % MAC [-]
-        "front_cargo_location_m": -1.5,  # xcg of the front cargo hold, from the nose in [m]
-        "back_cargo_location_m": 1.5,  # xcg of the back cargo hold, from the nose in [m]
-        "front_cargo_kg": 10000,  # weight of the front cargo, in [kg]
-        "back_cargo_kg": 10000,  # weight of the back cargo, in [kg]
+        "front_cargo_location_m": 10,  # xcg of the front cargo hold, from the nose in [m]
+        "back_cargo_location_m": 20,  # xcg of the back cargo hold, from the nose in [m]
+        "front_cargo_kg": 6000,  # weight of the front cargo, in [kg]
+        "back_cargo_kg": 5000,  # weight of the back cargo, in [kg]
         "num_pax": 109,  # number of passengers [-]
         "pax_kg": 79,  # weight of each passenger, in [kg]
         "first_row_position_m": 8,  # position of the first row, from the nose in [m]
