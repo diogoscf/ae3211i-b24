@@ -251,9 +251,9 @@ if __name__ == "__main__":
         "filename": "full_payload_config",        # filename to save to
         "show_legend": True,                      # whether to display the legend
         "cargo_first": True,                      # whether to load cargo first (True) or passengers (False)
-        "x_LEMAC_m": 15,                          # position of the MAC from the nose, in [m]
-        "MAC_m": 4,                               # MAC, in [m]
-        "OEW_kg": 10_000,                         # OEW, in [kg]
+        "x_LEMAC_m": 15.549,                      # position of the MAC from the nose, in [m]
+        "MAC_m": 4.124,                           # MAC, in [m]
+        "OEW_kg": 24541,                          # OEW, in [kg]
         "xcg_oew": 0.3,                           # xcg of the OEW, in % MAC [-]
         "front_cargo_position_m": 10,             # xcg of the front cargo hold, from the nose in [m]
         "back_cargo_position_m": 20,              # xcg of the back cargo hold, from the nose in [m]
