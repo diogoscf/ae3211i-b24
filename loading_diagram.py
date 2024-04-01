@@ -3,9 +3,7 @@ from constants import G
 import matplotlib.pyplot as plt
 
 
-def add_cargo(
-    ax, OEW, xcg_oew, front_cargo_location, back_cargo_location, front_cargo, back_cargo
-):
+def add_cargo(ax, OEW, xcg_oew, front_cargo_location, back_cargo_location, front_cargo, back_cargo):
     full_cargo_weight = OEW + front_cargo + back_cargo
     full_cargo_cg = (
         OEW * xcg_oew
@@ -24,16 +22,12 @@ def add_cargo(
         full_cargo_cg,
     ]
     back_weights = [OEW, OEW + back_cargo, full_cargo_weight]
-    ax.plot(
-        front_cgs, front_weights, "orangered", label="Cargo loading (front to back)"
-    )
+    ax.plot(front_cgs, front_weights, "orangered", label="Cargo loading (front to back)")
     ax.plot(back_cgs, back_weights, "darkred", label="Cargo loading (back to front)")
     return full_cargo_cg, full_cargo_weight
 
 
-def add_pax(
-    ax, num_pax, pax_weight, first_row_position, seat_pitch, start_cg, start_weight
-):
+def add_pax(ax, num_pax, pax_weight, first_row_position, seat_pitch, start_cg, start_weight):
     num_full_rows, num_last_row = divmod(num_pax, 5)
     has_extra_row = num_last_row != 0
     last_row_position = first_row_position + (num_full_rows - 1) * seat_pitch
@@ -58,7 +52,7 @@ def add_pax(
             (
                 start_weight * start_cg
                 + pax_weight * (
-                    (2 * i) * (last_row_position - (i-1)/2 * seat_pitch)
+                    (2 * i) * (last_row_position - (i-3)/2 * seat_pitch)
                 )
             ) / Wi
         )
@@ -85,7 +79,7 @@ def add_pax(
                 start_weight * start_cg
                 + pax_weight * (
                     (2 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
-                    + (2 * i) * (last_row_position - (i-1)/2 * seat_pitch)
+                    + (2 * i) * (last_row_position - (i-3)/2 * seat_pitch)
                 )
             )
             / Wi
@@ -113,18 +107,18 @@ def add_pax(
                 start_weight * start_cg
                 + pax_weight * (
                     (4 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
-                    + i * (last_row_position - seat_pitch - (i-1)/2 * seat_pitch)
+                    + i * (last_row_position - seat_pitch - (i-3)/2 * seat_pitch)
                 )
             )
             / Wi
         )
-
-    ax.plot(cgs_windows_front_to_back, weights_windows, "orange", label="Window seats (front to back)")
-    ax.plot(cgs_windows_back_to_front, weights_windows, "peru", label="Window seats (back to front)")
-    ax.plot(cgs_aisles_front_to_back, weights_aisles, "yellowgreen", label="Aisle seats (front to back)")
-    ax.plot(cgs_aisles_back_to_front, weights_aisles, "lawngreen", label="Aisle seats (back to front)")
-    ax.plot(cgs_middle_front_to_back, weights_middle, "aquamarine", label="Middle seats (front to back)")
-    ax.plot(cgs_middle_back_to_front, weights_middle, "lightseagreen", label="Middle seats (back to front)")
+    
+    ax.plot(cgs_windows_front_to_back, weights_windows, c="orange", label="Window seats (front to back)")
+    ax.plot(cgs_windows_back_to_front, weights_windows, c="peru", label="Window seats (back to front)")
+    ax.plot(cgs_aisles_front_to_back, weights_aisles, c="yellowgreen", label="Aisle seats (front to back)")
+    ax.plot(cgs_aisles_back_to_front, weights_aisles, c="lawngreen", label="Aisle seats (back to front)")
+    ax.plot(cgs_middle_front_to_back, weights_middle, c="aquamarine", label="Middle seats (front to back)")
+    ax.plot(cgs_middle_back_to_front, weights_middle, c="lightseagreen", label="Middle seats (back to front)")
 
     return ..., num_pax * pax_weight
 
