@@ -32,6 +32,8 @@ def add_pax(ax, num_pax, pax_weight, first_row_position, seat_pitch, start_cg, s
     has_extra_row = num_last_row != 0
     last_row_position = first_row_position + (num_full_rows - 1) * seat_pitch
 
+    # TODO: figure out why i-3 works for backwards loading - doesn't make sense at all, even though it looks right
+
     # Windows
     weights_windows = []
     cgs_windows_front_to_back = []
@@ -120,24 +122,21 @@ def add_pax(ax, num_pax, pax_weight, first_row_position, seat_pitch, start_cg, s
     ax.plot(cgs_middle_front_to_back, weights_middle, c="aquamarine", label="Middle seats (front to back)")
     ax.plot(cgs_middle_back_to_front, weights_middle, c="lightseagreen", label="Middle seats (back to front)")
 
-    return ..., num_pax * pax_weight
+    return (
+        (
+            start_weight * start_cg
+            + pax_weight * (
+                (4 * (num_full_rows + has_extra_row)) * ((num_full_rows + has_extra_row - 1)/2 * seat_pitch + first_row_position)
+                + (num_full_rows) * ((num_full_rows-1)/2 * seat_pitch + first_row_position)
+            )
+        ) / (start_weight + num_pax * pax_weight),
+        num_pax * pax_weight
+    ),
 
 
 def generate_loading_diagram(
-    filename,
-    show_legend,
-    OEW_kg,
-    xcg_oew,
-    x_LEMAC_m,
-    MAC_m,
-    front_cargo_location_m,
-    back_cargo_location_m,
-    front_cargo_kg,
-    back_cargo_kg,
-    num_pax,
-    pax_kg,
-    first_row_position_m,
-    seat_pitch_in,
+    filename, show_legend, OEW_kg, xcg_oew, x_LEMAC_m, MAC_m, front_cargo_location_m, back_cargo_location_m, 
+    front_cargo_kg, back_cargo_kg, num_pax, pax_kg, first_row_position_m, seat_pitch_in
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
     OEW = OEW_kg * G  # convert to [N]
@@ -174,18 +173,18 @@ def generate_loading_diagram(
 if __name__ == "__main__":
     full_payload_config = {
         "filename": "full_payload_config",  # filename to save to
-        "show_legend": True,  # whether to display the legend
-        "x_LEMAC_m": 15,  # position of the MAC from the nose, in [m]
-        "MAC_m": 4,  # MAC, in [m]
-        "OEW_kg": 10_000,  # OEW, in [kg]
-        "xcg_oew": 0.3,  # xcg of the OEW, in % MAC [-]
-        "front_cargo_location_m": 10,  # xcg of the front cargo hold, from the nose in [m]
-        "back_cargo_location_m": 20,  # xcg of the back cargo hold, from the nose in [m]
-        "front_cargo_kg": 6000,  # weight of the front cargo, in [kg]
-        "back_cargo_kg": 5000,  # weight of the back cargo, in [kg]
-        "num_pax": 109,  # number of passengers [-]
-        "pax_kg": 79,  # weight of each passenger, in [kg]
-        "first_row_position_m": 8,  # position of the first row, from the nose in [m]
-        "seat_pitch_in": 32,  # seat pitch, in [in]
+        "show_legend": True,                # whether to display the legend
+        "x_LEMAC_m": 15,                    # position of the MAC from the nose, in [m]
+        "MAC_m": 4,                         # MAC, in [m]
+        "OEW_kg": 10_000,                   # OEW, in [kg]
+        "xcg_oew": 0.3,                     # xcg of the OEW, in % MAC [-]
+        "front_cargo_location_m": 10,       # xcg of the front cargo hold, from the nose in [m]
+        "back_cargo_location_m": 20,        # xcg of the back cargo hold, from the nose in [m]
+        "front_cargo_kg": 6000,             # weight of the front cargo, in [kg]
+        "back_cargo_kg": 5000,              # weight of the back cargo, in [kg]
+        "num_pax": 109,                     # number of passengers [-]
+        "pax_kg": 79,                       # weight of each passenger, in [kg]
+        "first_row_position_m": 8,          # position of the first row, from the nose in [m]
+        "seat_pitch_in": 32,                # seat pitch, in [in]
     }
     generate_loading_diagram(**full_payload_config)
