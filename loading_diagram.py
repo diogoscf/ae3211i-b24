@@ -3,28 +3,39 @@ from constants import G
 import matplotlib.pyplot as plt
 
 
-def add_cargo(ax, start_weight, start_cg, front_cargo_position, back_cargo_position, front_cargo, back_cargo):
-    full_cargo_weight = start_weight + front_cargo + back_cargo
-    full_cargo_cg = (
-        start_weight * start_cg
-        + front_cargo * front_cargo_position
-        + back_cargo * back_cargo_position
-    ) / (full_cargo_weight)
+def add_cargo(ax, start_weight, start_cg, total_cargo, front_cargo_max_weight, front_cargo_position, back_cargo_max_weight, back_cargo_position):
+    if isinstance(total_cargo, (int, float)):
+        if total_cargo > front_cargo_max_weight + back_cargo_max_weight:
+            raise ValueError(
+                f"requested cargo load of {total_cargo / G} [kg] exceeds cargo capacity of "
+                f"{(front_cargo_max_weight + back_cargo_max_weight) / G} [kg]"
+            )
+        fraction = total_cargo / (front_cargo_max_weight + back_cargo_max_weight)  # assume balanced
+    elif isinstance(total_cargo, str):
+        if total_cargo != "max":
+            raise ValueError(f"invalid total cargo choice {total_cargo}")
+        total_cargo = front_cargo_max_weight + back_cargo_max_weight
+        fraction = 1.0
+    else:
+        raise TypeError(f"invalid type of total cargo {type(total_cargo)}")
+    
+    front_weights = [start_weight, start_weight + front_cargo_max_weight * fraction, start_weight + total_cargo]
     front_cgs = [
         start_cg,
-        (start_weight * start_cg + front_cargo * front_cargo_position) / (start_weight + front_cargo),
-        full_cargo_cg,
+        (start_weight * start_cg + fraction * (front_cargo_max_weight * front_cargo_position)) / (start_weight + front_cargo_max_weight * fraction),
+        (start_weight * start_cg + fraction * (front_cargo_max_weight * front_cargo_position + back_cargo_max_weight * back_cargo_position)) / (start_weight + total_cargo)
     ]
-    front_weights = [start_weight, start_weight + front_cargo, full_cargo_weight]
+    back_weights = [start_weight, start_weight + back_cargo_max_weight * fraction, start_weight + total_cargo]
     back_cgs = [
         start_cg,
-        (start_weight * start_cg + back_cargo * back_cargo_position) / (start_weight + back_cargo),
-        full_cargo_cg,
+        (start_weight * start_cg + fraction * (back_cargo_max_weight * back_cargo_position)) / (start_weight + back_cargo_max_weight * fraction),
+        (start_weight * start_cg + fraction * (front_cargo_max_weight * front_cargo_position + back_cargo_max_weight * back_cargo_position)) / (start_weight + total_cargo)
     ]
-    back_weights = [start_weight, start_weight + back_cargo, full_cargo_weight]
+
     ax.plot(front_cgs, front_weights, "orangered", label="Cargo loading (front to back)")
     ax.plot(back_cgs, back_weights, "darkred", label="Cargo loading (back to front)")
-    return full_cargo_weight, full_cargo_cg, {start_cg, full_cargo_cg, *front_cgs, *back_cgs}
+
+    return front_weights[-1], front_cgs[-1], {*front_cgs, *back_cgs}
 
 
 def add_pax(ax, start_weight, start_cg, num_pax, pax_weight, first_row_position, seat_pitch):
@@ -138,41 +149,47 @@ def add_pax(ax, start_weight, start_cg, num_pax, pax_weight, first_row_position,
     )
 
 
-def add_fuel(ax, start_weight, start_cg, load_wing_tank_first, wing_tank_capacity, center_tank_capacity, wing_tank_position, center_tank_position, fuel_load):
+def add_fuel(ax, start_weight, start_cg, load_wing_tank_first, wing_tank_capacity, center_tank_capacity, wing_tank_position, center_tank_position, mtow, fuel_load):
+    if isinstance(fuel_load, str):
+        if fuel_load != "max":
+            raise ValueError(f"invalid fuel load option {fuel_load}")
+        fuel_load = min(mtow - start_weight, wing_tank_capacity + center_tank_capacity)
+    elif isinstance(fuel_load, (float, int)):
+        if fuel_load > wing_tank_capacity + center_tank_capacity:
+            raise ValueError(
+                f"fuel load of {fuel_load / G} [kg] is beyond total tank capacity of "
+                f"{(wing_tank_capacity + center_tank_capacity) / G} [kg]"
+            )
+
     if load_wing_tank_first:
         wing_load = min(wing_tank_capacity, fuel_load)
         center_load = max(0, fuel_load - wing_load)
-        weights = [start_weight, start_weight + wing_load, start_weight + wing_load + center_load]
+        weights = [start_weight, start_weight + wing_load, start_weight + fuel_load]
         cgs = [
             start_cg,
             (start_weight * start_cg + wing_load * wing_tank_position) / (start_weight + wing_load),
-            (start_weight * start_cg + wing_load * wing_tank_position + center_load * center_tank_position) / (start_weight + wing_load + center_load),
+            (start_weight * start_cg + wing_load * wing_tank_position + center_load * center_tank_position) / (start_weight + fuel_load),
         ]
     else:
         center_load = min(center_tank_capacity, fuel_load)
         wing_load = max(0, fuel_load - center_load)
-        weights = [start_weight, start_weight + center_load, start_weight + center_load + wing_load]
+        weights = [start_weight, start_weight + center_load, start_weight + fuel_load]
         cgs = [
             start_cg,
             (start_weight * start_cg + center_load * center_tank_position) / (start_weight + center_load),
-            (start_weight * start_cg + center_load * center_tank_position + wing_load * wing_tank_position) / (start_weight + center_load + wing_load),
+            (start_weight * start_cg + center_load * center_tank_position + wing_load * wing_tank_position) / (start_weight + fuel_load),
         ]
-    if wing_load + center_load > wing_tank_capacity + center_tank_capacity:
-        raise ValueError(
-            f"wing load of {wing_load / G} [kg] and center load of {center_load / G} [kg] is greater than the capacity "
-            f"{(wing_load + center_load) / G} [kg]"
-        )
     
-    ax.plot(cgs, weights, c="blue", label="Fuel")
+    ax.plot(cgs, weights, c="blue", label=f"Fuel ({'wing tanks' if load_wing_tank_first else 'center tank'} first)")
 
     return weights[-1], cgs[-1], {start_cg, *cgs}
 
 
 def generate_loading_diagram(
-    filename, show_legend, cargo_first, OEW_kg, xcg_oew, x_LEMAC_m, MAC_m, front_cargo_position_m,
-    back_cargo_position_m, front_cargo_kg, back_cargo_kg, num_pax, pax_kg, first_row_position_m, seat_pitch_in,
-    load_wing_tank_first, wing_tank_capacity_kg, center_tank_capacity_kg, wing_tank_position_mac,
-    center_tank_position_mac, fuel_load_kg
+    filename, show_legend, cargo_first, OEW_kg, xcg_oew, x_LEMAC_m, MAC_m, total_cargo_kg, 
+    front_cargo_max_weight_kg, front_cargo_stations_m, back_cargo_max_weight_kg, back_cargo_stations_m, num_pax,
+    pax_kg, first_row_position_m, seat_pitch_in, load_wing_tank_first, wing_tank_capacity_kg, center_tank_capacity_kg, 
+    wing_tank_position_mac, center_tank_position_mac, mtow_kg, fuel_load_kg
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
     OEW = OEW_kg * G  # convert to [N]
@@ -183,10 +200,11 @@ def generate_loading_diagram(
             ax,
             OEW,
             xcg_oew,
-            (front_cargo_position_m - x_LEMAC_m) / MAC_m,
-            (back_cargo_position_m - x_LEMAC_m) / MAC_m,
-            front_cargo_kg * G,
-            back_cargo_kg * G,
+            total_cargo_kg * G if isinstance(total_cargo_kg, (int, float)) else total_cargo_kg,
+            front_cargo_max_weight_kg * G,
+            ((front_cargo_stations_m[0] + front_cargo_stations_m[1])/2 - x_LEMAC_m) / MAC_m,
+            back_cargo_max_weight_kg * G,
+            ((back_cargo_stations_m[0] + back_cargo_stations_m[1])/2 - x_LEMAC_m) / MAC_m,
         )
         after_cargo_and_pax_weight, after_cargo_and_pax_cg, pax_cgs = add_pax(
             ax,
@@ -211,10 +229,11 @@ def generate_loading_diagram(
             ax,
             after_pax_weight,
             after_pax_cg,
-            (front_cargo_position_m - x_LEMAC_m) / MAC_m,
-            (back_cargo_position_m - x_LEMAC_m) / MAC_m,
-            front_cargo_kg * G,
-            back_cargo_kg * G,
+            total_cargo_kg * G if isinstance(total_cargo_kg, (int, float)) else total_cargo_kg,
+            front_cargo_max_weight_kg * G,
+            ((front_cargo_stations_m[0] + front_cargo_stations_m[1])/2 - x_LEMAC_m) / MAC_m,
+            back_cargo_max_weight_kg * G,
+            ((back_cargo_stations_m[0] + back_cargo_stations_m[1])/2 - x_LEMAC_m) / MAC_m,
         )
     
     after_fuel_weight, after_fuel_cg, fuel_cgs = add_fuel(
@@ -226,7 +245,8 @@ def generate_loading_diagram(
         center_tank_capacity_kg * G,
         wing_tank_position_mac,
         center_tank_position_mac,
-        fuel_load_kg * G
+        mtow_kg * G,
+        fuel_load_kg * G if isinstance(fuel_load_kg, (int, float)) else fuel_load_kg
     )
     
     # final cg bounds
@@ -234,7 +254,7 @@ def generate_loading_diagram(
     cg_margin = 0.02  # cg margin, in % MAC
     lower_limit = min(all_cgs) - cg_margin
     upper_limit = max(all_cgs) + cg_margin
-    ax.axvline(lower_limit, c="k", label="cg limits position with margin")
+    ax.axvline(lower_limit, c="k", label=f"cg limits with {cg_margin * 100:.0f}% margin")
     ax.axvline(upper_limit, c="k")  # yes this has no label, but they're both black lines
 
     if show_legend:
@@ -248,26 +268,28 @@ def generate_loading_diagram(
 
 if __name__ == "__main__":
     full_payload_config = {
-        "filename": "full_payload_config",        # filename to save to
-        "show_legend": True,                      # whether to display the legend
-        "cargo_first": True,                      # whether to load cargo first (True) or passengers (False)
-        "x_LEMAC_m": 15.549,                      # position of the MAC from the nose, in [m]
-        "MAC_m": 4.124,                           # MAC, in [m]
-        "OEW_kg": 24541,                          # OEW, in [kg]
-        "xcg_oew": 0.3,                           # xcg of the OEW, in % MAC [-]
-        "front_cargo_position_m": 10,             # xcg of the front cargo hold, from the nose in [m]
-        "back_cargo_position_m": 20,              # xcg of the back cargo hold, from the nose in [m]
-        "front_cargo_kg": 6000,                   # weight of the front cargo, in [kg]
-        "back_cargo_kg": 5000,                    # weight of the back cargo, in [kg]
-        "num_pax": 109,                           # number of passengers [-]
-        "pax_kg": 79,                             # weight of each passenger, in [kg]
-        "first_row_position_m": 8,                # position of the first row, from the nose in [m]
-        "seat_pitch_in": 32,                      # seat pitch, in [in]
-        "load_wing_tank_first": True,             # whether to load the wing tank first (True), or the center tank (False)
-        "wing_tank_capacity_kg": 7000,            # capacity of both wing tanks, in [kg] of fuel
-        "center_tank_capacity_kg": 3000,          # capacity of the center tank, in [kg] of fuel
-        "wing_tank_position_mac": 0.6,            # wing tank cg, in % MAC from LEMAC [-]
-        "center_tank_position_mac": 0.4,          # center tank cg, in % MAC from LEMAC [-]
-        "fuel_load_kg": 9000,                     # total fuel load, in [kg]
+        "filename": "full_payload_config",          # filename to save to
+        "show_legend": True,                        # whether to display the legend
+        "cargo_first": True,                        # whether to load cargo first (True) or passengers (False)
+        "x_LEMAC_m": 15.549,                        # position of the MAC from the nose, in [m]
+        "MAC_m": 4.124,                             # MAC, in [m]
+        "OEW_kg": 24541,                            # OEW, in [kg]
+        "xcg_oew": 0.3,                             # xcg of the OEW, in % MAC [-]
+        "total_cargo_kg": "max",                    # either the total cargo in [kg], or "max" to fully fill all cargo holds
+        "front_cargo_max_weight_kg": 1239 + 1387,   # max weights of the front compartment (hold 1 and 2) in [kg]
+        "front_cargo_stations_m": (6.920, 14.466),  # the front and rear stations of the front compartments in [m], from the nose
+        "back_cargo_max_weight_kg": 1576 + 982,     # iterable of the max weights of the 3 rear compartments in [kg]
+        "back_cargo_stations_m": (18.506, 24.878),  # iterable of the 4 inter-compartment stations of the rear compartments in [m], from the nose
+        "num_pax": 109,                             # number of passengers [-]
+        "pax_kg": 79,                               # weight of each passenger, in [kg]
+        "first_row_position_m": (8 * 32 * 0.0254),  # position of the first row, from the nose in [m]
+        "seat_pitch_in": 32,                        # seat pitch, in [in]
+        "load_wing_tank_first": False,              # whether to load the wing tank first (True), or the center tank (False)
+        "wing_tank_capacity_kg": 7733,              # capacity of both wing tanks, in [kg] of fuel
+        "center_tank_capacity_kg": 2512,            # capacity of the center tank, in [kg] of fuel
+        "wing_tank_position_mac": 0.6,              # wing tank cg, in % MAC from LEMAC [-]
+        "center_tank_position_mac": 0.4,            # center tank cg, in % MAC from LEMAC [-]
+        "mtow_kg": 45810,                           # MTOW, in [kg]
+        "fuel_load_kg": "max",                      # total fuel load, in [kg], or "max" to load up to limiting factor (MTOW or tank capacity)
     }
     generate_loading_diagram(**full_payload_config)
