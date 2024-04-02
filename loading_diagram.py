@@ -274,7 +274,7 @@ if __name__ == "__main__":
         "x_LEMAC_m": 13.3,                        # position of the MAC from the nose, in [m]
         "MAC_m": 3.832,                             # MAC, in [m]
         "OEW_kg": 24541,                            # OEW, in [kg]
-        "xcg_oew": 0.6,                             # xcg of the OEW, in % MAC [-]
+        "xcg_oew": 0.747,                             # xcg of the OEW, in % MAC [-]
         "total_cargo_kg": "max",                    # either the total cargo in [kg], or "max" to fully fill all cargo holds
         "front_cargo_max_weight_kg": 1239 + 1387,   # max weights of the front compartment (hold 1 and 2) in [kg]
         "front_cargo_stations_m": (6.920, 14.466),  # the front and rear stations of the front compartments in [m], from the nose
@@ -287,9 +287,9 @@ if __name__ == "__main__":
         "load_wing_tank_first": True,               # whether to load the wing tank first (True), or the center tank (False)
         "wing_tank_capacity_kg": 7733,              # capacity of both wing tanks, in [kg] of fuel
         "center_tank_capacity_kg": 2512,            # capacity of the center tank, in [kg] of fuel
-        "wing_tank_position_mac": 0.2,              # wing tank cg, in % MAC from LEMAC [-]
-        "center_tank_position_mac": 0.7,            # center tank cg, in % MAC from LEMAC [-]
+        "wing_tank_position_mac": 0.46,              # wing tank cg, in % MAC from LEMAC [-]
+        "center_tank_position_mac": 0.22,            # center tank cg, in % MAC from LEMAC [-]
         "mtow_kg": 45810,                           # MTOW, in [kg]
-        "fuel_load_kg": 7474,                      # total fuel load, in [kg], or "max" to load up to limiting factor (MTOW or tank capacity)
+        "fuel_load_kg": "max",                      # total fuel load, in [kg], or "max" to load up to limiting factor (MTOW or tank capacity)
     }
     generate_loading_diagram(**full_payload_config)
