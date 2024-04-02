@@ -37,7 +37,7 @@ def max_payload_weight_breakdown():
     ]
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.pie(sizes, autopct="%1.1f%%")
+    ax.pie(sizes, autopct="%1.2f%%")
     ax.legend(labels=labels, bbox_to_anchor=(1.3, 1.0))
     fig.savefig("pie_chart_1.png", dpi=300, bbox_inches="tight")
     plt.show()
