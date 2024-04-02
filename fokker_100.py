@@ -8,9 +8,9 @@ WHEELBASE = 14.006  # m - janes & Fokker
 WHEEL_TRACK = 5.040  # m - janes & Fokker
 HORIZONTAL_STAB_B = 10.040  # m - janes & Fokker
 
-MTOW = 45810  # kg - janes
+MTOW = 45810  # kg - janes & airlines.net
 MLW = 39915  # kg - janes
-MZFW = 36740  # kg - janes
-FUEL_CAPACITY = 10731  # kg - janes
-MAX_PAYLOAD = 11993  # kg - wikipedia
-EMPTY_WEIGHT = 24541  # kg - wikipedia
+MZFW = 36740  # kg - janes & aom
+FUEL_CAPACITY = 10256  # kg - janes
+MAX_PAYLOAD = 12199  # kg - calculated
+EMPTY_WEIGHT = 24541  # kg - airlines.net
