@@ -270,11 +270,11 @@ if __name__ == "__main__":
     full_payload_config = {
         "filename": "full_payload_config",          # filename to save to
         "show_legend": True,                        # whether to display the legend
-        "cargo_first": True,                        # whether to load cargo first (True) or passengers (False)
+        "cargo_first": True,                        # whether to load cargo first (True) or passengers first (False)
         "x_LEMAC_m": 13.3,                        # position of the MAC from the nose, in [m]
-        "MAC_m": 3.832,                             # MAC, in [m]
+        "MAC_m": 3.79857,                             # MAC, in [m]
         "OEW_kg": 24541,                            # OEW, in [kg]
-        "xcg_oew": 0.747,                             # xcg of the OEW, in % MAC [-]
+        "xcg_oew": 0.747119,                             # xcg of the OEW, in % MAC [-]
         "total_cargo_kg": "max",                    # either the total cargo in [kg], or "max" to fully fill all cargo holds
         "front_cargo_max_weight_kg": 1239 + 1387,   # max weights of the front compartment (hold 1 and 2) in [kg]
         "front_cargo_stations_m": (6.920, 14.466),  # the front and rear stations of the front compartments in [m], from the nose
