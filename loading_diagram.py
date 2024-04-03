@@ -197,7 +197,7 @@ def add_fuel(ax, start_weight, start_cg, load_wing_tank_first, wing_tank_capacit
     print(f"  Center tank load: {center_load / G:.2f} [kg]")
     print(f"  Fuel tank fill fraction: {fuel_load / (center_tank_capacity + wing_tank_capacity) * 100:.2f} %")
     
-    ax.plot(cgs, weights, c="blue", label=f"Fuel ({'wing tanks' if load_wing_tank_first else 'center tank'} first)")
+    ax.plot(cgs, weights, c="royalblue", label=f"Fuel ({'wing tanks' if load_wing_tank_first else 'center tank'} first)")
 
     return weights[-1], cgs[-1], {start_cg, *cgs}
 
@@ -298,7 +298,7 @@ if __name__ == "__main__":
         "cargo_first": True,                        # whether to load cargo first (True) or passengers first (False)
         "x_LEMAC_m": 15.8745,                       # position of the MAC from the nose, in [m]
         "MAC_m": 3.79857,                           # MAC, in [m]
-        "xcg_oew": 0.76946,                         # xcg of the OEW, in % MAC [-]
+        "xcg_oew": 0.816098,                        # xcg of the OEW, in % MAC [-]
         "OEW_kg": 24541,                            # OEW, in [kg]
         "mtow_kg": 45810,                           # MTOW, in [kg]
         "max_payload_kg": 12199,                    # max payload (pax + cargo) weight, in [kg]
@@ -309,7 +309,7 @@ if __name__ == "__main__":
         "back_cargo_stations_m": (18.506, 24.878),  # iterable of the 4 inter-compartment stations of the rear compartments in [m], from the nose
         "num_pax": 109,                             # number of passengers [-]
         "pax_kg": 79,                               # weight of each passenger, in [kg]
-        "first_row_position_m": (8 * 32 * 0.0254),  # position of the first row, from the nose in [m]
+        "first_row_position_m": 6.90,               # position of the first row, from the nose in [m]
         "seat_pitch_in": 32,                        # seat pitch, in [in]
         "load_wing_tank_first": True,               # whether to load the wing tank first (True), or the center tank (False)
         "wing_tank_capacity_kg": 7744,              # capacity of both wing tanks, in [kg] of fuel
