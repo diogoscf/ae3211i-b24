@@ -50,7 +50,7 @@ def stability_line(
 
     x_ac_f1 = (-1.8 / C_L_alpha_A_H) * (b_f * h_f * l_fn) / (S * mac)
     c_g = S / b
-    x_ac_f2 = (0.273 / (1 + taper_ratio)) * (b_f * c_g * (b - b_f)) / (mac ** 2 + 2.15 * b_f) * tan(quarter_chord_sweep)
+    x_ac_f2 = (0.273 / (1 + taper_ratio)) * (b_f * c_g * (b - b_f)) / (mac ** 2 * (b + 2.15 * b_f)) * tan(quarter_chord_sweep)
     x_ac_n = 2 * k_n * (b_n ** 2 * l_n) / (S * mac * C_L_alpha_A_H)
     x_ac = x_ac_w + x_ac_f1 + x_ac_f2 + x_ac_n
 
@@ -58,13 +58,14 @@ def stability_line(
     intercept = (x_ac - stability_margin) / denom
     x_points = [x_ac - stability_margin, (max_Sh_S - intercept) * denom]
     y_points = [0, max_Sh_S]
+    # breakpoint()
     ax.plot(x_points, y_points, label="Stability curve")
 
 
 def scissor_plot(
-    filename, max_Sh_S, M_cruise, S, S_net, b, mac, quarter_chord_sweep_deg, half_chord_sweep_deg, taper_ratio, A_h,
-    horizontal_stab_half_chord_sweep_deg, use_torenbeek_method, eta, l_h, delta_z_wing_tail_acs, b_f, h_f, l_fn, b_n,
-    l_n, c_l_des, x_ac_w, k_n, Vh_V, stability_margin,
+    filename, show_legend, max_Sh_S, M_cruise, S, S_net, b, mac, quarter_chord_sweep_deg, half_chord_sweep_deg,
+    taper_ratio, A_h, horizontal_stab_half_chord_sweep_deg, use_torenbeek_method, eta, l_h, delta_z_wing_tail_acs, b_f,
+    h_f, l_fn, b_n, l_n, c_l_des, x_ac_w, k_n, Vh_V, stability_margin,
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -97,6 +98,12 @@ def scissor_plot(
         stability_margin,
     )
 
+    if show_legend:
+        ax.legend()
+    ax.set_xlabel(r"$x_{cg}/\bar{c}$ [-]")
+    ax.set_ylabel(r"$S_h/S$ [-]")
+    fig.tight_layout()
+
     fig.savefig(filename, dpi=300, bbox_inches="tight")
     plt.show()
 
@@ -104,6 +111,7 @@ def scissor_plot(
 if __name__ == "__main__":
     reference_aircraft_config = {
         "filename": "ref_aircraft_scissor_plot",          # filename to save to
+        "show_legend": True,                              # whether to show the legend
         "max_Sh_S": 0.7,                                  # max Sh/S to plot
         "M_cruise": 0.7,                                  # cruise Mach number
         "S": 93.5,                                        # wing area in [m^2]
