@@ -1,5 +1,7 @@
 from math import tan, radians, sqrt, pi, atan2, sin, cos
+from copy import copy
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from constants import G
 
 
@@ -63,14 +65,19 @@ def stability_line(
     stability_x_points = [x_ac - stability_margin, (max_Sh_S + stability_line_intercept) / slope]
     y_points = [0, max_Sh_S]
     # breakpoint()
-    ax.plot(neutral_x_points, y_points, label="Neutral stability curve")
-    ax.plot(stability_x_points, y_points, label="Stability curve")
+    # n_s_line, = ax.plot(neutral_x_points, y_points, label="Neutral stability curve")
+    # s_line, = ax.plot(stability_x_points, y_points, label="Stability curve")
+    n_s_line = Line2D(neutral_x_points, y_points, c="orange", label="Neutral stability line")
+    s_line = Line2D(stability_x_points, y_points, c="green", label="Stability line")
+    ax.add_line(copy(n_s_line))
+    ax.add_line(copy(s_line))
+    return n_s_line, s_line
 
 
 def controllability_line(
     ax, max_Sh_S, M, alpha_0_l, delta_alpha_0_l, C_m_0_airfoil, C_l_max, eta, S, S_prime, S_wf, c, b, b_f, h_f, l_f,
     l_h, x_ac, quarter_chord_sweep, half_chord_sweep, flap_hinge_sweep_angle, V_app, rho, W, Vh_V, c_prime, C_L_H, mu_1,
-    mu_2, mu_3,
+    mu_2, mu_3, flap_moment_multiplier,
 ):
     A = b**2 / S
     C_L_alpha_A_H = datcom(A, M, eta, half_chord_sweep)
@@ -89,7 +96,7 @@ def controllability_line(
     c_l = C_L - delta_f_c_l * (1 - S_wf / S)
     delta_f_c_m_1_4 = -mu_1 * delta_f_c_l * (c_prime / c) - c_l * (1/8) * (c_prime / c) * (c_prime / c - 1)
     delta_f_C_m_ac = mu_2 * delta_f_c_m_1_4 + 0.7 * A / (1 + 2/A) * mu_3 * delta_f_c_l * tan(quarter_chord_sweep)
-    C_m_ac = C_m_ac_w + delta_f_C_m_ac + delta_fus_C_m_ac + delta_nac_C_m_ac
+    C_m_ac = C_m_ac_w + flap_moment_multiplier * delta_f_C_m_ac + delta_fus_C_m_ac + delta_nac_C_m_ac
 
     delta_C_l_max = delta_f_c_l
     delta_C_L_max = 0.9 * delta_C_l_max * (S_wf / S) * cos(flap_hinge_sweep_angle)
@@ -105,7 +112,10 @@ def controllability_line(
     slope = 1 / denom
     x_points = [(max_Sh_S - intercept) / slope, -intercept / slope]
     y_points = [max_Sh_S, 0]
-    ax.plot(x_points, y_points, label="Controllability curve")
+    # c_line, = ax.plot(x_points, y_points, label="Controllability curve")
+    c_line = Line2D(x_points, y_points, c="royalblue", label="Controllability line")
+    ax.add_line(copy(c_line))
+    return c_line
 
 
 def scissor_plot(
@@ -113,11 +123,11 @@ def scissor_plot(
     taper_ratio, A_h, horizontal_stab_half_chord_sweep_deg, use_torenbeek_method, eta, l_h, delta_z_wing_tail_acs, b_f,
     h_f, l_fn, b_n, l_n, c_l_des, x_ac_w_cruise, k_n, Vh_V, stability_margin, V_app_kts, alpha_0_l, delta_alpha_0_l,
     C_m_0_airfoil, C_l_max, S_prime, S_wf, l_f, x_ac_w_landing, flap_hinge_sweep_deg, rho_landing, m_landing_kg,
-    delta_c_cf, cf, C_L_H, mu_1, mu_2, mu_3, min_cg_pos, max_cg_pos,
+    delta_c_cf, cf, C_L_H, mu_1, mu_2, mu_3, min_cg_pos, max_cg_pos, flap_moment_multiplier
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    stability_line(
+    n_s_line, s_line = stability_line(
         ax,
         max_Sh_S,
         M_cruise,
@@ -146,7 +156,7 @@ def scissor_plot(
         stability_margin,
     )
 
-    controllability_line(
+    c_line = controllability_line(
         ax,
         max_Sh_S,
         V_app_kts * 1852/3600 / sqrt(1.4 * 287 * 288.15),
@@ -177,6 +187,7 @@ def scissor_plot(
         mu_1,
         mu_2,
         mu_3,
+        flap_moment_multiplier,
     )
 
     ax.axvline(min_cg_pos, c="k", linestyle="--", label="Most forward and aft c.g. positions")
@@ -185,17 +196,20 @@ def scissor_plot(
         ax.legend()
     ax.set_xlabel(r"$x_{cg}/\bar{c}$ [-]")
     ax.set_ylabel(r"$S_h/S$ [-]")
+    ax.autoscale()
+    ax.set_xlim(0, 1.05)
     fig.tight_layout()
 
     fig.savefig(filename, dpi=300, bbox_inches="tight")
     plt.show()
+    return n_s_line, s_line, c_line
 
 
 if __name__ == "__main__":
     reference_aircraft_config = {
         "filename": "ref_aircraft_scissor_plot",          # filename to save to
         "show_legend": True,                              # whether to show the legend
-        "max_Sh_S": 0.4,                                  # max Sh/S to plot
+        "max_Sh_S": 0.3,                                  # max Sh/S to plot
         "M_cruise": 0.7,                                  # cruise Mach number
         "S": 93.5,                                        # wing area in [m^2]
         "S_net": 81.1229,                                 # S less the projection of the wing in the fuselage [m^2]
@@ -238,7 +252,53 @@ if __name__ == "__main__":
         "mu_1": 0.12,                                     # from Torenbeek fig. G-15
         "mu_2": 0.78,                                     # from Torenbeek fig. G-16
         "mu_3": 0.0575,                                   # from Torenbeek fig. G-17
-        "min_cg_pos": 0.4619,
-        "max_cg_pos": 0.9845,
+        "min_cg_pos": 0.4770,                             # min cg pos (for plotting), [% MAC]
+        "max_cg_pos": 0.8842,                             # max cg pos (for plotting), [% MAC]
+        "flap_moment_multiplier": 1,                      # extra multiplier for flap moment [-]
     }
-    scissor_plot(**reference_aircraft_config)
+    ref_n_s_line, ref_s_line, ref_c_line = scissor_plot(**reference_aircraft_config)
+    
+    f120_config = reference_aircraft_config.copy()
+    f120_config["filename"] = "f120_scissor_plot"
+    f120_config["b_n"] *= 1.3
+    f120_config["min_cg_pos"] = 0.4617
+    f120_config["max_cg_pos"] = 0.9845
+    f120_config["flap_moment_multiplier"] = 1.2
+    f120_n_s_line, f120_s_line, f120_c_line = scissor_plot(**f120_config)
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    ref_n_s_line.set_label("F100 neutral stability line")
+    ref_s_line.set_label("F100 stability line")
+    ref_c_line.set_label("F100 controllability line")
+    f120_n_s_line.set_label("F120 neutral stability line")
+    f120_s_line.set_label("F120 stability line")
+    f120_c_line.set_label("F120 controllability line")
+
+    ref_n_s_line.set_color("chocolate")
+    f120_n_s_line.set_color("orange")
+    ref_s_line.set_color("forestgreen")
+    f120_s_line.set_color("limegreen")
+    ref_c_line.set_color("darkblue")
+    f120_c_line.set_color("cornflowerblue")
+
+    ax.add_line(ref_n_s_line)
+    ax.add_line(ref_s_line)
+    ax.add_line(ref_c_line)
+    ax.add_line(f120_n_s_line)
+    ax.add_line(f120_s_line)
+    ax.add_line(f120_c_line)
+    ax.axvline(reference_aircraft_config["min_cg_pos"], c="k", linestyle="--", label="F100 most forward and aft c.g. positions")
+    ax.axvline(reference_aircraft_config["max_cg_pos"], c="k", linestyle="--")
+    ax.axvline(f120_config["min_cg_pos"], c="slategray", linestyle="--", label="F120 most forward and aft c.g. positions")
+    ax.axvline(f120_config["max_cg_pos"], c="slategray", linestyle="--")
+
+    ax.set_xlabel(r"$x_{cg}/\bar{c}$ [-]")
+    ax.set_ylabel(r"$S_h/S$ [-]")
+    ax.autoscale()
+    ax.set_xlim(0, 1.05)
+    ax.legend()
+    fig.tight_layout()
+
+    fig.savefig("combined_scissor", dpi=300, bbox_inches="tight")
+    plt.show()
