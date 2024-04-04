@@ -9,6 +9,7 @@ payload_weight = f100.MAX_PAYLOAD * c.G
 MTOW = f100.MTOW * c.G
 sizes = [OEW, fuel_weight, payload_weight]
 
+
 def more_than_100_percent():
     labels = [
         f"OEW\n{OEW:.2f} N\n{100*OEW/MTOW:.2f} % of MTOW",
@@ -16,12 +17,12 @@ def more_than_100_percent():
         f"Payload Weight\n{payload_weight:.2f} N\n{100*payload_weight/MTOW:.2f} % of MTOW",
     ]
 
-
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.pie(sizes)
     ax.legend(labels=labels, bbox_to_anchor=(1.3, 1.0))
     fig.savefig("pie_chart.png", dpi=300, bbox_inches="tight")
     plt.show()
+
 
 def max_payload_weight_breakdown():
     OEW = f100.EMPTY_WEIGHT * c.G
@@ -43,5 +44,26 @@ def max_payload_weight_breakdown():
     plt.show()
 
 
+def f120_weight_breakdown():
+    OEW = 25907.59 * c.G
+    fuel_weight = 500 * c.G
+    payload_weight = 12294 * c.G
+    MTOW_120 = 41311.79 * c.G
+
+    sizes = [OEW, fuel_weight, payload_weight]
+
+    labels = [
+        f" OEW\n{OEW:.2f} N\n{100*OEW/MTOW_120:.2f} % of MTOW_120",
+        f" Fuel Weight\n{fuel_weight:.2f} N\n{100*fuel_weight/MTOW_120:.2f} % of MTOW_120",
+        f" Payload Weight\n{payload_weight:.2f} N\n{100*payload_weight/MTOW_120:.2f} % of MTOW_120",
+    ]
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.pie(sizes)
+    ax.legend(labels=labels, bbox_to_anchor=(1.3, 1.0))
+    fig.savefig("pie_chart_f120.png", dpi=300, bbox_inches="tight")
+    plt.show()
+
+
 if __name__ == "__main__":
-    max_payload_weight_breakdown()
+    f120_weight_breakdown()
