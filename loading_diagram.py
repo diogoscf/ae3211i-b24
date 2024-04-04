@@ -368,7 +368,7 @@ def generate_loading_diagram(
     wing_tank_position_mac, center_tank_position_mac, fuel_load_kg, battery_pos, battery_mass=0, fig=None, ax=None, legend_thingy=None
 ):
     if fig is None and ax is None:
-        fig, ax = plt.subplots(figsize=(12, 8))
+        fig, ax = plt.subplots(figsize=(6, 4.5))
         double_plot = False
     else:
         # change colour of existing lines to red
