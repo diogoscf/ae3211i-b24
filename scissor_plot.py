@@ -40,13 +40,12 @@ def stability_line(
         # ) * C_L_alpha_w / (pi * A)
         # one_minus_d_eps_d_alpha = 1 - d_eps_d_alpha
     
-    else:
-        zero_lift_angle = radians(4 * c_l_des)
-        ac_angle = atan2(delta_z_wing_tail_acs, l_h)
-        m_dimensional = l_h * sin(zero_lift_angle + ac_angle) / cos(ac_angle)
-        m = 2 * m_dimensional / b
-        d_eps_d_alpha = 1.75 * C_L_alpha_w / (pi * A * (taper_ratio * r)**0.25 * (1 + abs(m)))
-        one_minus_d_eps_d_alpha = (1 - d_eps_d_alpha) * 0.9  # correct for fuselage engines
+    zero_lift_angle = radians(4 * c_l_des)
+    ac_angle = atan2(delta_z_wing_tail_acs, l_h)
+    m_dimensional = l_h * sin(zero_lift_angle + ac_angle) / cos(ac_angle)
+    m = 2 * m_dimensional / b
+    d_eps_d_alpha = 1.75 * C_L_alpha_w / (pi * A * (taper_ratio * r)**0.25 * (1 + abs(m)))
+    one_minus_d_eps_d_alpha = (1 - d_eps_d_alpha) * 0.9  # correct for fuselage engines
     
     one_minus_d_eps_d_alpha = 1 - 0.10
 
@@ -57,12 +56,15 @@ def stability_line(
     x_ac = x_ac_w + x_ac_f1 + x_ac_f2 + x_ac_n
 
     denom = (C_L_alpha_H / C_L_alpha_A_H * one_minus_d_eps_d_alpha * l_h / c * Vh_V ** 2)
-    intercept = (x_ac - stability_margin) / denom
+    neutral_line_intercept = x_ac / denom
+    stability_line_intercept = (x_ac - stability_margin) / denom
     slope = 1 / denom
-    x_points = [x_ac - stability_margin, (max_Sh_S - intercept) / slope]
+    neutral_x_points = [x_ac, (max_Sh_S + neutral_line_intercept) / slope]
+    stability_x_points = [x_ac - stability_margin, (max_Sh_S + stability_line_intercept) / slope]
     y_points = [0, max_Sh_S]
     # breakpoint()
-    ax.plot(x_points, y_points, label="Stability curve")
+    ax.plot(neutral_x_points, y_points, label="Neutral stability curve")
+    ax.plot(stability_x_points, y_points, label="Stability curve")
 
 
 def controllability_line(
@@ -102,7 +104,7 @@ def controllability_line(
     intercept = (C_m_ac / C_L_A_H - x_ac) / denom
     slope = 1 / denom
     x_points = [(max_Sh_S - intercept) / slope, -intercept / slope]
-    y_points = [intercept + max_Sh_S, 0]
+    y_points = [max_Sh_S, 0]
     ax.plot(x_points, y_points, label="Controllability curve")
 
 
@@ -111,7 +113,7 @@ def scissor_plot(
     taper_ratio, A_h, horizontal_stab_half_chord_sweep_deg, use_torenbeek_method, eta, l_h, delta_z_wing_tail_acs, b_f,
     h_f, l_fn, b_n, l_n, c_l_des, x_ac_w_cruise, k_n, Vh_V, stability_margin, V_app_kts, alpha_0_l, delta_alpha_0_l,
     C_m_0_airfoil, C_l_max, S_prime, S_wf, l_f, x_ac_w_landing, flap_hinge_sweep_deg, rho_landing, m_landing_kg,
-    delta_c_cf, cf, C_L_H, mu_1, mu_2, mu_3,
+    delta_c_cf, cf, C_L_H, mu_1, mu_2, mu_3, min_cg_pos, max_cg_pos,
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -177,6 +179,8 @@ def scissor_plot(
         mu_3,
     )
 
+    ax.axvline(min_cg_pos, c="k", linestyle="--", label="Most forward and aft c.g. positions")
+    ax.axvline(max_cg_pos, c="k", linestyle="--")
     if show_legend:
         ax.legend()
     ax.set_xlabel(r"$x_{cg}/\bar{c}$ [-]")
@@ -191,7 +195,7 @@ if __name__ == "__main__":
     reference_aircraft_config = {
         "filename": "ref_aircraft_scissor_plot",          # filename to save to
         "show_legend": True,                              # whether to show the legend
-        "max_Sh_S": 0.7,                                  # max Sh/S to plot
+        "max_Sh_S": 0.4,                                  # max Sh/S to plot
         "M_cruise": 0.7,                                  # cruise Mach number
         "S": 93.5,                                        # wing area in [m^2]
         "S_net": 81.1229,                                 # S less the projection of the wing in the fuselage [m^2]
@@ -234,5 +238,7 @@ if __name__ == "__main__":
         "mu_1": 0.12,                                     # from Torenbeek fig. G-15
         "mu_2": 0.78,                                     # from Torenbeek fig. G-16
         "mu_3": 0.0575,                                   # from Torenbeek fig. G-17
+        "min_cg_pos": 0.4619,
+        "max_cg_pos": 0.9845,
     }
     scissor_plot(**reference_aircraft_config)
