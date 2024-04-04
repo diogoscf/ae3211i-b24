@@ -209,7 +209,7 @@ if __name__ == "__main__":
     reference_aircraft_config = {
         "filename": "ref_aircraft_scissor_plot",          # filename to save to
         "show_legend": True,                              # whether to show the legend
-        "max_Sh_S": 0.3,                                  # max Sh/S to plot
+        "max_Sh_S": 0.35,                                 # max Sh/S to plot
         "M_cruise": 0.7,                                  # cruise Mach number
         "S": 93.5,                                        # wing area in [m^2]
         "S_net": 81.1229,                                 # S less the projection of the wing in the fuselage [m^2]
@@ -292,6 +292,7 @@ if __name__ == "__main__":
     ax.axvline(reference_aircraft_config["max_cg_pos"], c="k", linestyle="--")
     ax.axvline(f120_config["min_cg_pos"], c="slategray", linestyle="--", label="F120 most forward and aft c.g. positions")
     ax.axvline(f120_config["max_cg_pos"], c="slategray", linestyle="--")
+    ax.axhline(0.2301997401, c="purple", linestyle="--", label="F100 and F120 actual $S_h/S$")
 
     ax.set_xlabel(r"$x_{cg}/\bar{c}$ [-]")
     ax.set_ylabel(r"$S_h/S$ [-]")
