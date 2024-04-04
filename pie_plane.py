@@ -45,17 +45,19 @@ def max_payload_weight_breakdown():
 
 
 def f120_weight_breakdown():
-    OEW = 25907.59 * c.G
+    OEW = 25507.59 * c.G
     fuel_weight = 500 * c.G
     payload_weight = 12294 * c.G
     MTOW_120 = 41311.79 * c.G
+    BW = 400 * c.G
 
-    sizes = [OEW, fuel_weight, payload_weight]
+    sizes = [OEW, fuel_weight, payload_weight, BW]
 
     labels = [
         f" OEW\n{OEW:.2f} N\n{100*OEW/MTOW_120:.2f} % of MTOW_120",
         f" Fuel Weight\n{fuel_weight:.2f} N\n{100*fuel_weight/MTOW_120:.2f} % of MTOW_120",
         f" Payload Weight\n{payload_weight:.2f} N\n{100*payload_weight/MTOW_120:.2f} % of MTOW_120",
+        f" Battery Weight\n{BW:.2f} N\n{100*BW/MTOW_120:.2f} % of MTOW_120"
     ]
 
     fig, ax = plt.subplots(figsize=(8, 6))
