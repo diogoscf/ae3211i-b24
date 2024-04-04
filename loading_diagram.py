@@ -535,6 +535,7 @@ if __name__ == "__main__":
     f120_config['mtow_kg'] = 41311.79
     f120_config['center_tank_position_mac'] = 2.0010
     f120_config['xcg_oew'] = 0.90765
+    f120_config['max_payload_kg'] = 12294
     
     f120_config["fig"] = fig
     f120_config["ax"] = ax
