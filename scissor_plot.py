@@ -20,6 +20,9 @@ def stability_line(
     C_L_alpha_H = datcom(A_h, M, eta, horizontal_stab_half_chord_sweep)
     C_L_alpha_w = datcom(A, M, eta, half_chord_sweep)
     C_L_alpha_A_H = C_L_alpha_w * (1 + 2.15 * b_f/b) * (S_net/S) + (pi/2) * (b_f**2 / S)
+    print(f"Tail lift rate at cruise: {C_L_alpha_H}")
+    print(f"Aircraft-less-tail lift rate at cruise: {C_L_alpha_A_H}")
+    print(f"  Wing only: {C_L_alpha_w}")
     
     r = 2 * l_h / b  # same for both
     
@@ -56,6 +59,11 @@ def stability_line(
     x_ac_f2 = (0.273 / (1 + taper_ratio)) * (b_f * c_g * (b - b_f)) / (c ** 2 * (b + 2.15 * b_f)) * tan(quarter_chord_sweep)
     x_ac_n = 2 * k_n * (b_n ** 2 * l_n) / (S * c * C_L_alpha_A_H)
     x_ac = x_ac_w + x_ac_f1 + x_ac_f2 + x_ac_n
+    print(f"a.c. aircraft-less-tail at cruise: {x_ac}")
+    print(f"  Wing contribution: {x_ac_w}")
+    print(f"  Fuselage term 1 contribution: {x_ac_f1}")
+    print(f"  Fuselage term 2 contribution: {x_ac_f2}")
+    print(f"  Nacelle contribution: {x_ac_n}")
 
     denom = (C_L_alpha_H / C_L_alpha_A_H * one_minus_d_eps_d_alpha * l_h / c * Vh_V ** 2)
     neutral_line_intercept = x_ac / denom
@@ -97,6 +105,12 @@ def controllability_line(
     delta_f_c_m_1_4 = -mu_1 * delta_f_c_l * (c_prime / c) - c_l * (1/8) * (c_prime / c) * (c_prime / c - 1)
     delta_f_C_m_ac = mu_2 * delta_f_c_m_1_4 + 0.7 * A / (1 + 2/A) * mu_3 * delta_f_c_l * tan(quarter_chord_sweep)
     C_m_ac = C_m_ac_w + flap_moment_multiplier * delta_f_C_m_ac + delta_fus_C_m_ac + delta_nac_C_m_ac
+    print(f"Zero-lift pitching moment C_m_ac: {C_m_ac}")
+    print(f"  Wing contribution: {C_m_ac_w}")
+    print(f"  Flap contribution: {flap_moment_multiplier * delta_f_C_m_ac}")
+    print(f"  Fuselage contribution: {delta_fus_C_m_ac}")
+    print(f"  Nacelle contribution: {delta_nac_C_m_ac}")
+
 
     delta_C_l_max = delta_f_c_l
     delta_C_L_max = 0.9 * delta_C_l_max * (S_wf / S) * cos(flap_hinge_sweep_angle)
@@ -106,6 +120,9 @@ def controllability_line(
     C_L_landing = (V_s / V_app)**2 * C_L_max
     C_L_w = C_L_landing
     C_L_A_H = C_L_w
+    print(f"Maximum tail lift coefficient: {C_L_H}")
+    print(f"Aircraft-less-tail C_L at landing: {C_L_A_H}")
+    # print(f"Zero lift pitching moment: {}")
 
     denom = (C_L_H / C_L_A_H) * (l_h / c) * Vh_V ** 2
     intercept = (C_m_ac / C_L_A_H - x_ac) / denom
@@ -126,6 +143,11 @@ def scissor_plot(
     delta_c_cf, cf, C_L_H, mu_1, mu_2, mu_3, min_cg_pos, max_cg_pos, flap_moment_multiplier
 ):
     fig, ax = plt.subplots(figsize=(12, 8))
+
+    print(f"Table parameters for {filename}:")
+    print(f"Cruise speed [M]: {M_cruise}")
+    print(f"Approach speed: {V_app_kts} kts, equal to {V_app_kts * 1852/3600 / sqrt(1.4*287*288.15):.6f} Mach")
+    print(f"Tail-wing speed ratio: {Vh_V}")
 
     n_s_line, s_line = stability_line(
         ax,
